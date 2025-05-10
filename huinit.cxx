@@ -3,6 +3,11 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <stdexcept>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/resource.h>
 
 struct command
 {
@@ -15,6 +20,10 @@ struct process {
   std::string file_stream_input{};
   std::string file_stream_output{};
 };
+
+void change_directory();
+void daemonize();
+void close_files();
 
 int main(const int amounts_arguments, const char* const arguments[]) {
   if(amounts_arguments <= 1) {
@@ -45,7 +54,7 @@ int main(const int amounts_arguments, const char* const arguments[]) {
     read.pop_back();
     read.shrink_to_fit();
     process.command.arguments = std::move(read);
-    std::cerr << "executable file:" << process.command.file_executable << '\n';
+    std::cerr << "executable file: " << process.command.file_executable << '\n';
 
     for (const auto& argument : process.command.arguments) {
       std::cerr << "argument: " << argument << '\n';
@@ -55,5 +64,55 @@ int main(const int amounts_arguments, const char* const arguments[]) {
       << '\n' << "output stream file: " << process.file_stream_output << '\n';
   }
 
+  std::cerr << "daemonize\n";
+  daemonize();
+  std::cerr << "close files\n";
+  close_files();
+  std::cerr << "change directory\n";
+  change_directory();
+
   return 0;
+}
+
+void change_directory() {
+  const int status = chdir("/");
+
+  if(status != 0) {
+    throw std::runtime_error{"fail to change current working directory"};
+  }
+}
+
+void daemonize() {
+  const pid_t child{fork()};
+
+  if(child == (pid_t)-1) {
+    throw std::runtime_error{"fail to create child process"};
+  }
+
+  else if(child != 0) {
+    exit(0);
+  }
+
+  const pid_t session{setsid()};
+
+  if(session == (pid_t)-1) {
+    throw std::runtime_error{"fail to create session"};
+  }
+}
+
+void close_files() {
+  struct rlimit maximum_file_descriptor_number{};
+  const int status{getrlimit(RLIMIT_NOFILE, &maximum_file_descriptor_number)};
+
+  if(status != 0) {
+    throw std::runtime_error{"fail to get a maximum file descriptor number"};
+  }
+
+  for(int descriptor{}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
+    const int status{close(descriptor)};
+
+    if (status != 0) {
+      std::cerr << "fail to close file with descriptor = " << descriptor << '\n';
+    }
+  }
 }
