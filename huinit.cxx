@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <fcntl.h>
 
 struct command
 {
@@ -24,6 +25,7 @@ struct process {
 void change_directory();
 void daemonize();
 void close_files();
+void create_log();
 
 int main(const int amounts_arguments, const char* const arguments[]) {
   if(amounts_arguments <= 1) {
@@ -74,6 +76,8 @@ int main(const int amounts_arguments, const char* const arguments[]) {
   close_files();
   std::cerr << "change directory\n";
   change_directory();
+  std::cerr << "create log\n";
+  create_log();
 
   return 0;
 }
@@ -117,8 +121,13 @@ void close_files() {
   }
 }
 
-    if (status != 0) {
-      std::cerr << "fail to close file with descriptor = " << descriptor << '\n';
-    }
+void create_log() {
+  const int descriptor_log = open("/tmp/huinit.log", O_CREAT | O_TRUNC | O_WRONLY, 0600);
+
+  if(descriptor_log < 0) {
+    throw std::runtime_error{"fail to create log"};
   }
+
+  (const void)write(descriptor_log, "start\n", 6);
+  (const void)close(descriptor_log);
 }
