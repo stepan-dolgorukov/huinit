@@ -27,12 +27,16 @@ void close_files();
 
 int main(const int amounts_arguments, const char* const arguments[]) {
   if(amounts_arguments <= 1) {
+    std::cerr << "configuration isn't defined" << '\n';
+
     return 1;
   }
 
   std::ifstream input{arguments[1]};
 
   if(!input) {
+    std::cerr << "fail to get access for read to " << arguments[1] << '\n';
+
     return 1;
   }
 
