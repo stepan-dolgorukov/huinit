@@ -93,7 +93,7 @@ void change_directory() {
 void daemonize() {
   const pid_t child{fork()};
 
-  if(child == (pid_t)-1) {
+  if(child == (const pid_t)-1) {
     throw std::runtime_error{"fail to create child process"};
   }
 
@@ -103,7 +103,7 @@ void daemonize() {
 
   const pid_t session{setsid()};
 
-  if(session == (pid_t)-1) {
+  if(session == (const pid_t)-1) {
     throw std::runtime_error{"fail to create session"};
   }
 }
