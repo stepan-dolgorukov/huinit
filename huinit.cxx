@@ -167,9 +167,10 @@ void run(const process& process) {
   std::string copy_file_executable{process.command.file_executable};
   char* const file_executable{copy_file_executable.data()};
   char** arguments{nullptr};
+  const size_t amount_arguments{process.command.arguments.size() + 2};
 
   try {
-    arguments = new char*[process.command.arguments.size() + 2];
+    arguments = new char*[amount_arguments]{};
   }
 
   catch(const std::exception& exception) {
@@ -187,7 +188,7 @@ void run(const process& process) {
     }
   }
 
-  arguments[process.command.arguments.size() + 1] = nullptr;
+  arguments[amount_arguments - 1] = nullptr;
 
   { identifier = fork();
 
