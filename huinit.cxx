@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <forward_list>
+#include <unordered_map>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -29,10 +30,9 @@ void change_directory();
 void daemonize();
 void close_files();
 void create_log();
-void run(const process&);
+void run(const process&, int position);
 
 std::vector<pid_t> children{};
-pid_t identifier{-1};
 
 int main(const int amounts_arguments, const char* const arguments[]) {
   if(amounts_arguments <= 1) {
@@ -91,19 +91,23 @@ int main(const int amounts_arguments, const char* const arguments[]) {
   change_directory();
   std::cerr << "create log\n";
   create_log();
-  children = std::vector(processes.size(), -1);
+  children = std::vector(processes.size(), (const pid_t)-1);
 
   for(int position_process{}; position_process < processes.size(); ++position_process) {
-    run(processes.at(position_process));
+    run(processes.at(position_process), position_process);
   }
 
   while(true) {
-    identifier = waitpid(-1, NULL, 0);
+    pid_t changed_state{waitpid(-1, NULL, 0)};
+
+    if(changed_state < 0) {
+      return 1;
+    }
 
     for(int position{}; position < children.size(); ++position) {
-      if(children.at(position) == identifier) {
-        // children[position] = (const pid_t)-1;
-        // run(processes.at(position));
+      if(children.at(position) == changed_state) {
+        children.at(position) = (const pid_t)-1;
+        run(processes.at(position), position);
       }
     }
   }
@@ -147,7 +151,7 @@ void close_files() {
     throw std::runtime_error{"fail to get a maximum file descriptor number"};
   }
 
-  for(int descriptor{3}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
+  for(int descriptor{2}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
     (const void)close(descriptor);
   }
 }
@@ -163,7 +167,11 @@ void create_log() {
   (const void)close(descriptor_log);
 }
 
-void run(const process& process) {
+void run(const process& process, int position) {
+  if(children.at(position) != (const pid_t)-1) {
+    return;
+  }
+
   std::string copy_file_executable{process.command.file_executable};
   char* const file_executable{copy_file_executable.data()};
   char** arguments{nullptr};
@@ -190,11 +198,9 @@ void run(const process& process) {
 
   arguments[amount_arguments - 1] = nullptr;
 
-  { identifier = fork();
+  { pid_t identifier{fork()};
 
     if(identifier == 0) {
-      identifier = getpid();
-
       { int descriptor_input{-1};
 
         { const char* const file_stream_input{process.file_stream_input.c_str()};
@@ -250,7 +256,12 @@ void run(const process& process) {
     }
 
     else if(identifier > 0) {
-      children.push_back(identifier);
+      children.at(position) = identifier;
+
+      // for(int position{1}; position < amount_arguments - 1; ++position) {
+      //   delete arguments[position];
+      // }
+
       delete[] arguments;
     }
 
