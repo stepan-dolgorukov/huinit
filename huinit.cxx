@@ -33,23 +33,19 @@ void create_log();
 void run(const process&, int position);
 
 std::vector<pid_t> children{};
+std::string file_configuration{};
+std::vector<process> processes{};
 
-int main(const int amounts_arguments, const char* const arguments[]) {
-  if(amounts_arguments <= 1) {
-    std::cerr << "configuration isn't defined" << '\n';
-
-    return 1;
-  }
-
-  std::vector<process> processes{};
+void start_huinit() {
+  processes = {};
 
   {
-    std::ifstream input{arguments[1]};
+    std::ifstream input{file_configuration};
 
     if(!input) {
-      std::cerr << "fail to get access for read to " << arguments[1] << '\n';
+      std::cerr << "fail to get access for read to " << file_configuration << '\n';
 
-      return 1;
+      return;
     }
 
     for(std::string line{}; std::getline(input, line);) {
@@ -97,11 +93,11 @@ int main(const int amounts_arguments, const char* const arguments[]) {
     run(processes.at(position_process), position_process);
   }
 
-  while(true) {
-    pid_t changed_state{waitpid(-1, NULL, 0)};
+  while (!processes.empty()) {
+    const pid_t changed_state{waitpid(-1, NULL, 0)};
 
     if(changed_state < 0) {
-      return 1;
+      // ...
     }
 
     for(int position{}; position < children.size(); ++position) {
@@ -111,7 +107,36 @@ int main(const int amounts_arguments, const char* const arguments[]) {
       }
     }
   }
+}
 
+void handle_sighup(int number) {
+  for (const pid_t child : children) {
+    if(child == (pid_t)-1) {
+      continue;
+    }
+
+    const int status{kill(child, SIGTERM)};
+
+    if (status < 0) {
+      // ...
+    }
+  }
+
+  start_huinit();
+}
+
+int main(const int amounts_arguments, const char* const arguments[]) {
+  if(amounts_arguments <= 1) {
+    std::cerr << "configuration isn't defined" << '\n';
+    return 1;
+  }
+
+  if (signal(SIGHUP, handle_sighup) == SIG_ERR) {
+    return 1;
+  }
+
+  file_configuration = arguments[1];
+  start_huinit();
   return 0;
 }
 
