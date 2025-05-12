@@ -29,7 +29,7 @@ struct process {
 void change_directory();
 void daemonize();
 void close_files();
-void create_log();
+void write_to_log(const std::string&);
 void run(const process&, int position);
 
 std::vector<pid_t> children{};
@@ -37,13 +37,14 @@ std::string file_configuration{};
 std::vector<process> processes{};
 
 void start_huinit() {
+  write_to_log("start huinit\n");
   processes = {};
 
   {
     std::ifstream input{file_configuration};
 
     if(!input) {
-      std::cerr << "fail to get access for read to " << file_configuration << '\n';
+      write_to_log("fail to get access for read to " + file_configuration + '\n');
 
       return;
     }
@@ -79,17 +80,10 @@ void start_huinit() {
     }
   }
 
-  std::cerr << "daemonize\n";
-  daemonize();
-  std::cerr << "close files\n";
-  close_files();
-  std::cerr << "change directory\n";
-  change_directory();
-  std::cerr << "create log\n";
-  create_log();
   children = std::vector(processes.size(), (const pid_t)-1);
 
   for(int position_process{}; position_process < processes.size(); ++position_process) {
+    write_to_log("launch process at position " + std::to_string(position_process) + "\n");
     run(processes.at(position_process), position_process);
   }
 
@@ -103,6 +97,7 @@ void start_huinit() {
     for(int position{}; position < children.size(); ++position) {
       if(children.at(position) == changed_state) {
         children.at(position) = (const pid_t)-1;
+        write_to_log("relaunch process at position " + std::to_string(position) + '\n');
         run(processes.at(position), position);
       }
     }
@@ -110,6 +105,8 @@ void start_huinit() {
 }
 
 void handle_sighup(int number) {
+  write_to_log("sighup, restart\n");
+
   for (const pid_t child : children) {
     if(child == (pid_t)-1) {
       continue;
@@ -119,6 +116,10 @@ void handle_sighup(int number) {
 
     if (status < 0) {
       // ...
+    }
+
+    else {
+      write_to_log("kill " + std::to_string(child) + '\n');
     }
   }
 
@@ -134,6 +135,10 @@ int main(const int amounts_arguments, const char* const arguments[]) {
   if (signal(SIGHUP, handle_sighup) == SIG_ERR) {
     return 1;
   }
+
+  daemonize();
+  close_files();
+  change_directory();
 
   file_configuration = arguments[1];
   start_huinit();
@@ -176,19 +181,27 @@ void close_files() {
     throw std::runtime_error{"fail to get a maximum file descriptor number"};
   }
 
-  for(int descriptor{2}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
+  for(int descriptor{0}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
     (const void)close(descriptor);
   }
 }
 
-void create_log() {
-  const int descriptor_log = open("/tmp/huinit.log", O_CREAT | O_TRUNC | O_WRONLY, 0600);
+void write_to_log(const std::string& information) {
+  const int descriptor_log = open("/tmp/huinit.log", O_CREAT | O_WRONLY | O_APPEND, 0600);
 
   if(descriptor_log < 0) {
     throw std::runtime_error{"fail to create log"};
   }
 
-  (const void)write(descriptor_log, "start\n", 6);
+  (const void)write(descriptor_log, information.c_str(), information.size());
+
+  { const int status{fsync(descriptor_log)};
+
+    if(status < 0) {
+      // ...
+    }
+  }
+
   (const void)close(descriptor_log);
 }
 
