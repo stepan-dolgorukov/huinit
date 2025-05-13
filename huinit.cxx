@@ -181,7 +181,7 @@ void close_files() {
     throw std::runtime_error{"fail to get a maximum file descriptor number"};
   }
 
-  for(int descriptor{0}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
+  for(int descriptor{3}; descriptor < maximum_file_descriptor_number.rlim_max; ++descriptor ) {
     (const void)close(descriptor);
   }
 }
