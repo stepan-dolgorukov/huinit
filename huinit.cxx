@@ -5,8 +5,6 @@
 #include <vector>
 #include <stdexcept>
 #include <cstring>
-#include <forward_list>
-#include <unordered_map>
 
 #include <unistd.h>
 #include <sys/types.h>
