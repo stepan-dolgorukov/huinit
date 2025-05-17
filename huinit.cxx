@@ -86,7 +86,12 @@ void start_huinit() {
   children = std::vector(processes.size(), (const pid_t)-1);
 
   for(int position_process{}; position_process < processes.size(); ++position_process) {
-    write_to_log("launch process at position " + std::to_string(position_process) + "\n");
+    std::stringstream message{};
+
+    message << "launch a process that corresponds the configuration line ";
+    message << std::to_string(position_process);
+    message << '\n';
+    write_to_log(message.str());
     run(processes.at(position_process), position_process);
   }
 
