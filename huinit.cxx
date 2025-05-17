@@ -203,7 +203,7 @@ void close_files() {
 }
 
 void write_to_log(const std::string& information) {
-  const int descriptor_log = open("/tmp/huinit.log", O_CREAT | O_WRONLY | O_APPEND, 0600);
+  const int descriptor_log{ open("/tmp/huinit.log", O_CREAT | O_WRONLY | O_APPEND, 0600) };
 
   if(descriptor_log < 0) {
     throw std::runtime_error{"fail to create log"};
