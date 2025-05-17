@@ -144,7 +144,7 @@ void handle_sighup(int number) {
 
 int main(const int amounts_arguments, const char* const arguments[]) {
   if(amounts_arguments <= 1) {
-    std::cerr << "configuration isn't defined" << '\n';
+    write_to_log("configuration isn't defined\n");
     return 1;
   }
 
