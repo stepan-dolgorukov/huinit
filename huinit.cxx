@@ -129,7 +129,13 @@ void handle_sighup(int number) {
     }
 
     else {
-      write_to_log("kill " + std::to_string(child) + '\n');
+      std::stringstream message{};
+
+      message << "terminate process ";
+      message << std::to_string(child);
+      message << '\n';
+
+      write_to_log(message.str());
     }
   }
 
