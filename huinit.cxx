@@ -120,7 +120,12 @@ void handle_sighup(int number) {
     const int status{kill(child, SIGTERM)};
 
     if (status < 0) {
-      // ...
+      std::stringstream message{};
+
+      message << "fail to terminate process ";
+      message << std::to_string(child);
+      message << '\n';
+      write_to_log(message.str());
     }
 
     else {
