@@ -45,7 +45,6 @@ void start_huinit() {
 
     if(!input) {
       write_to_log("fail to get access for read to " + file_configuration + '\n');
-
       return;
     }
 
@@ -61,6 +60,12 @@ void start_huinit() {
       }
 
       read.pop_back();
+
+      if(read.size() < 2) {
+        write_to_log("wrong format of the configuration string");
+        return;
+      }
+
       process.file_stream_input = read.at(read.size() - 2);
       process.file_stream_output = read.at(read.size() - 1);
       read.pop_back();
