@@ -162,7 +162,7 @@ int main(const int amounts_arguments, const char* const arguments[]) {
 }
 
 void change_directory() {
-  const int status = chdir("/");
+  const int status{ chdir("/") };
 
   if(status != 0) {
     throw std::runtime_error{"fail to change current working directory"};
