@@ -5,4 +5,4 @@ huinit: huinit.o
 	"${compiler_cxx}" "${^}" '-o' "${@}"
 
 huinit.o: huinit.cxx
-	"${compiler_cxx}" "${settings_compiler_cxx}" '-c' "${^}"
+	"${compiler_cxx}" ${settings_compiler_cxx} '-c' "${^}"
