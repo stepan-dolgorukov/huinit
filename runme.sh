@@ -4,9 +4,9 @@ kill -TERM "$(pgrep huinit)"
 make huinit
 rm -f /tmp/huinit.log
 printf '1\n2\n3\n' >input_wc
-echo '/usr/bin/sleep 21 /home/sdd/huinit/input_sleep_21 /home/sdd/huinit/output_sleep_21' >configuration.text
-echo '/usr/bin/sleep 5 /home/sdd/huinit/input_sleep_5 /home/sdd/huinit/output_sleep_5' >>configuration.text
-echo '/usr/bin/sleep 13 /home/sdd/huinit/input_sleep_13  /home/sdd/huinit/output_sleep_13' >>configuration.text
+echo "/usr/bin/sleep 21 $(pwd)/input_sleep_21 /home/sdd/huinit/output_sleep_21" >configuration.text
+echo "/usr/bin/sleep 5 $(pwd)/input_sleep_5 /home/sdd/huinit/output_sleep_5" >>configuration.text
+echo "/usr/bin/sleep 13 $(pwd)/input_sleep_13  /home/sdd/huinit/output_sleep_13" >>configuration.text
 ./huinit "$(pwd)"/configuration.text
 sleep 1
 printf 'sleep 21 %d\n' $(pgrep -f 'sleep 21')
@@ -23,7 +23,7 @@ printf 'sleep 21 %d\n' $(pgrep -f 'sleep 21')
 printf 'sleep 5 %d\n' $(pgrep -f 'sleep 5')
 printf 'sleep 13 %d\n' $(pgrep -f 'sleep 13')
 echo 'edit configuration.text'
-echo '/usr/bin/sleep 5 /home/sdd/huinit/input_sleep_5 /home/sdd/huinit/output_sleep_5' >configuration.text
+echo "/usr/bin/sleep 5 $(pwd)/input_sleep_5 /home/sdd/huinit/output_sleep_5" >configuration.text
 sleep 1
 kill -HUP "${huinit}"
 sleep 1
