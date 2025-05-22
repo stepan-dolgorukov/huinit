@@ -19,7 +19,7 @@ struct command
 };
 
 struct process {
-  command command{};
+  struct command command{};
   std::string file_stream_input{};
   std::string file_stream_output{};
 };
