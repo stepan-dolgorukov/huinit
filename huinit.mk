@@ -1,5 +1,5 @@
 compiler_cxx := g++
-settings_compiler_cxx := -Og
+settings_compiler_cxx := -std=c++17 -Og
 
 huinit: huinit.o
 	"${compiler_cxx}" "${^}" '-o' "${@}"
