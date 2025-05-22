@@ -1,4 +1,4 @@
-compiler_cxx := clang++
+compiler_cxx := g++
 settings_compiler_cxx := -Og
 
 huinit: huinit.o
